@@ -20,15 +20,48 @@ exports.Register = async (req, res) => {
         const isResult = await db.mysqlQuery(isResultQuery, [email, username, phone]);
 
         if (isResult.length > 0) {
-            if (isResult[0].email === email) {
-                return res.status(400).json({ success: false, message: "Bu E-posta zaten kullanılıyor!" });
-            } else if (isResult[0].username === username) {
+            const existingUser = isResult[0];
+
+            if (existingUser.email === email) {
+
+                if (existingUser.activeAccount === 0) {
+
+                    const deleteCodeQuery = `
+                        DELETE FROM register_codes
+                        WHERE userId = ?;
+                    `;
+                    await db.mysqlQuery(deleteCodeQuery, [existingUser.id]);
+
+                    const code = Math.floor(100000 + Math.random() * 900000);
+                    const verifyCodeQuery = `
+                        INSERT INTO register_codes (userId, code)
+                        VALUES (?, ?);
+                    `;
+                    await db.mysqlQuery(verifyCodeQuery, [existingUser.id, code]);
+
+                    return res.status(200).json({
+                        success: true,
+                        message: "Kayıt başarılı, yeni doğrulama kodu gönderildi.",
+                        code: code,
+                        userId: existingUser.id
+                    });
+                } else {
+                    return res.status(400).json({ success: false, message: "Bu E-posta zaten kullanılıyor!" });
+                }
+            }
+
+            // Eğer mevcut kullanıcı adı ile aynıysa
+            if (existingUser.username === username) {
                 return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten kullanılıyor!" });
-            } else if (isResult[0].phone === phone) {
+            }
+
+            // Eğer mevcut telefon numarası ile aynıysa
+            if (existingUser.phone === phone) {
                 return res.status(400).json({ success: false, message: "Bu telefon numarası zaten kullanılıyor!" });
             }
         }
 
+        // Yeni kullanıcı kaydı
         const hashedPassword = await bcrypt.hash(password, 10);
         const authToken = crypto.randomUUID();
 
@@ -63,6 +96,8 @@ exports.Register = async (req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 };
+
+
 
 
 exports.VerifyRegisterCode = async(req, res) => {
