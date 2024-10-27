@@ -278,7 +278,7 @@ exports.Login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username FROM user WHERE email = ? LIMIT 1';
+        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username, password FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
 
         const results = await db.mysqlQuery(userQuery, [email]);
 
@@ -288,7 +288,7 @@ exports.Login = async (req, res) => {
 
         const user = results[0];
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        const passwordMatch = await bcrypt.compare(password, user.password); // burada user.password undefined olmamalı
         
         if (!passwordMatch) {
             return res.status(400).json({ success: false, message: 'Invalid email or password', code: 1000 });
@@ -314,7 +314,7 @@ exports.Login = async (req, res) => {
         res.status(200).json({ 
             success: true, 
             jwt,
-            user: {  // Kullanıcı bilgilerini ekliyoruz
+            user: {  
                 id: user.id,
                 name: user.name,
                 surname: user.surname,
@@ -330,6 +330,7 @@ exports.Login = async (req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 }
+
 
 
 exports.loginWithToken = async (req, res) => {
