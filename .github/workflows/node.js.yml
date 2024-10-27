@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies and restart app
       run: |
         cd ~/actions-runner/_work/Lingua-Backend/Lingua-Backend
-        git pull origin main      
+        git pull origin master      
         npm install               
         pm2 restart app.js
   
