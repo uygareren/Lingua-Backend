@@ -1,7 +1,7 @@
 const express = require("express");
 const { Joi, validate } = require('express-validation');
-const AuthController = require("../Controller/AuthController"); // Adjust the path as needed
 const {AuthMiddleware} = require("../middleware/AuthMiddleware");
+const AuthController = require("../controller/AuthController");
 
 const registerValidation = {
     body: Joi.object({
