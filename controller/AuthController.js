@@ -285,7 +285,7 @@ exports.Login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username, password FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
+        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username, password, countryId, languageId FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
 
         const results = await db.mysqlQuery(userQuery, [email]);
 
@@ -328,7 +328,10 @@ exports.Login = async (req, res) => {
                 email: user.email,
                 phone: user.phone,
                 username: user.username,
-                activeAccount: user.activeAccount
+                activeAccount: user.activeAccount,
+                countryId: user.countryId,
+                languageId: user.languageId
+
             } 
         });
 
@@ -348,7 +351,6 @@ exports.loginWithToken = async (req, res) => {
     }
 
     let jwt = tokenHeader.replace("Bearer ", "");
-    console.log("jwt", jwt);
 
     if (jwt === "") {
         return res.status(401).send();
@@ -360,14 +362,11 @@ exports.loginWithToken = async (req, res) => {
     }
 
     try {
-        console.log('Auth Token:', authToken); // Debugging line
-        console.log('Auth Token:', authToken); // Debugging line
 
         // Correctly handle authToken as a hex value for the query
         const userQuery = `SELECT * FROM user WHERE authToken = ? AND activeAccount = 1 LIMIT 1`;
         const [user] = await db.mysqlQuery(userQuery, [authToken]); // Pass authToken as parameter
 
-        console.log('User Query Result:', user); // Debugging line
 
         if (user == undefined) {
             return res.status(401).json({ success: false, message: 'Invalid token' });
@@ -381,6 +380,12 @@ exports.loginWithToken = async (req, res) => {
             name: user.name,
             surname: user.surname,
             email: user.email,
+            phone: user.phone,
+            username: user.username,
+            activeAccount: user.activeAccount,
+            countryId: user.countryId,
+            languageId: user.languageId
+
         };
 
         res.status(200).json({ success: true, message: 'Login successful', userInfo, jwt });
