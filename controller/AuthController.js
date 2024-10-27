@@ -14,13 +14,19 @@ exports.Register = async (req, res) => {
     try {
         const isResultQuery = `
             SELECT * FROM user
-            WHERE email = ? OR username = ?
+            WHERE email = ? OR username = ? OR phone = ?
             LIMIT 1
         `;
-        const isResult = await db.mysqlQuery(isResultQuery, [email, username]);
+        const isResult = await db.mysqlQuery(isResultQuery, [email, username, phone]);
 
         if (isResult.length > 0) {
-            return res.status(400).json({ success: false, message: "Bu E-posta veya kullanıcı adı zaten kullanılıyor!" });
+            if (isResult[0].email === email) {
+                return res.status(400).json({ success: false, message: "Bu E-posta zaten kullanılıyor!" });
+            } else if (isResult[0].username === username) {
+                return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten kullanılıyor!" });
+            } else if (isResult[0].phone === phone) {
+                return res.status(400).json({ success: false, message: "Bu telefon numarası zaten kullanılıyor!" });
+            }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,7 +47,7 @@ exports.Register = async (req, res) => {
 
         const verifyCodeQuery = `
             INSERT INTO register_codes (userId, code)
-            VALUES (?,?);
+            VALUES (?, ?);
         `;
         await db.mysqlQuery(verifyCodeQuery, [newUserResult[0].id, code]);
 
@@ -57,6 +63,7 @@ exports.Register = async (req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 };
+
 
 exports.VerifyRegisterCode = async(req, res) => {
     const {email, code} = req.body;
@@ -155,7 +162,7 @@ exports.ForgetPasswordEmailVerification = async(req, res) => {
         const user = await db.mysqlQuery(userQuery, [email]);
         const userId = user[0].id;
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const code = Math.floor(100000 + Math.random() * 900000)
 
         const forgetCodeInsertQuery = `
             INSERT INTO forget_password_codes (userId, code)
@@ -234,7 +241,7 @@ exports.ResendVerifyForgetPassword = async (req, res) => {
 
         const userId = userResult[0].id;
 
-        const newCode = Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit number
+        const newCode = Math.floor(100000 + Math.random() * 900000);
 
         const upsertCodeQuery = `
             DELETE FROM forget_password_codes WHERE userId = ?;
