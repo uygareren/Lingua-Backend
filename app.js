@@ -6,7 +6,7 @@ app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  res.send("Running 1!");
+  res.send("Running 12 !");
 });
 
 const PORT = 3000;
