@@ -125,7 +125,7 @@ exports.ResendVerifyRegisterCode = async (req, res) => {
 
         const userId = userResult[0].id;
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const code = Math.floor(100000 + Math.random() * 900000);
 
         const verifyCodeQuery = `
             DELETE FROM register_codes WHERE userId = ?;
@@ -274,11 +274,11 @@ exports.ForgetPasswordResetPassword = async (req, res) => {
     }
 };
 
-exports.Login = async(req, res) => {
-    const {email, password} = req.body;
+exports.Login = async (req, res) => {
+    const { email, password } = req.body;
 
     try {
-        const userQuery = 'SELECT id, password, activeAccount FROM user WHERE email = ? LIMIT 1';
+        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username FROM user WHERE email = ? LIMIT 1';
 
         const results = await db.mysqlQuery(userQuery, [email]);
 
@@ -290,7 +290,7 @@ exports.Login = async(req, res) => {
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         
-        if(!passwordMatch){
+        if (!passwordMatch) {
             return res.status(400).json({ success: false, message: 'Invalid email or password', code: 1000 });
         }
 
@@ -311,14 +311,26 @@ exports.Login = async(req, res) => {
         await db.mysqlQuery(updateQuery, [authToken, user.id]); 
 
         const jwt = createToken(authToken);
-        res.status(200).json({ success: true, jwt });
+        res.status(200).json({ 
+            success: true, 
+            jwt,
+            user: {  // Kullanıcı bilgilerini ekliyoruz
+                id: user.id,
+                name: user.name,
+                surname: user.surname,
+                email: user.email,
+                phone: user.phone,
+                username: user.username,
+                activeAccount: user.activeAccount
+            } 
+        });
 
-        
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 }
+
 
 exports.loginWithToken = async (req, res) => {
     const tokenHeader = req.headers["authorization"];
