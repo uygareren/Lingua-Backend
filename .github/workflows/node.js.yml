@@ -24,5 +24,11 @@ jobs:
     - name: Create .env file
       run: |
         echo "${{ secrets.PROD_ENV_FILE }}" > .env
-
+    
+    - name: Install dependencies and restart app
+      run: |
+        cd ~/actions-runner/_work/Lingua-Backend/Lingua-Backend
+        git pull origin main      
+        npm install               
+        pm2 restart app.js
   
