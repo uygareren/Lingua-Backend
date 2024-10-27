@@ -64,9 +64,7 @@ const forgetPasswordResetPasswordValidation = {
 
 const router = express.Router();
 
-// router.post('/register', validate(registerValidation), AuthController.Register);
-router.get('/register', AuthController.Register);
-
+router.post('/register', validate(registerValidation), AuthController.Register);
 router.post('/register-verify', validate(registerVerifyValidation), AuthController.VerifyRegisterCode);
 router.post('/register-resend-verify', validate(registerResendVerifyValidation), AuthController.ResendVerifyRegisterCode);
 

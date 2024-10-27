@@ -4,63 +4,58 @@ const { createToken, decodeToken } = require('../utils/jwt');
 const db = require("../config/database");
 const crypto = require("crypto");
 
-// exports.Register = async (req, res) => {
-//     const { name, surname, email, phone, password, password2, username } = req.body;
-
-//     if (password !== password2) {
-//         return res.status(400).json({ success: false, message: "Parolalar uyuşmuyor!" });
-//     }
-
-//     try {
-//         const isResultQuery = `
-//             SELECT * FROM user
-//             WHERE email = ? OR username = ?
-//             LIMIT 1
-//         `;
-//         const isResult = await db.mysqlQuery(isResultQuery, [email, username]);
-
-//         if (isResult.length > 0) {
-//             return res.status(400).json({ success: false, message: "Bu E-posta veya kullanıcı adı zaten kullanılıyor!" });
-//         }
-
-//         const hashedPassword = await bcrypt.hash(password, 10);
-//         const authToken = crypto.randomUUID();
-
-//         const insertQuery = `
-//             INSERT INTO user (name, surname, email, phone, password, authToken, createdAt, updatedAt, activeAccount, username)
-//             VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), 0, ?)
-//         `;
-//         await db.mysqlQuery(insertQuery, [name, surname, email, phone, hashedPassword, authToken, username]);
-
-//         const newUserQuery = `
-//             SELECT id FROM user WHERE email = ? LIMIT 1;
-//         `;
-//         const newUserResult = await db.mysqlQuery(newUserQuery, [email]);
-
-//         const code = Math.floor(100000 + Math.random() * 900000);
-
-//         const verifyCodeQuery = `
-//             INSERT INTO register_codes (userId, code)
-//             VALUES (?,?);
-//         `;
-//         await db.mysqlQuery(verifyCodeQuery, [newUserResult[0].id, code]);
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Kayıt başarılı.",
-//             code: code,
-//             userId: newUserResult[0].id
-//         });
-
-//     } catch (error) {
-//         console.error("Register error:", error);
-//         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
-//     }
-// };
-
 exports.Register = async (req, res) => {
-    res.send("Running!!!");
+    const { name, surname, email, phone, password, password2, username } = req.body;
 
+    if (password !== password2) {
+        return res.status(400).json({ success: false, message: "Parolalar uyuşmuyor!" });
+    }
+
+    try {
+        const isResultQuery = `
+            SELECT * FROM user
+            WHERE email = ? OR username = ?
+            LIMIT 1
+        `;
+        const isResult = await db.mysqlQuery(isResultQuery, [email, username]);
+
+        if (isResult.length > 0) {
+            return res.status(400).json({ success: false, message: "Bu E-posta veya kullanıcı adı zaten kullanılıyor!" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const authToken = crypto.randomUUID();
+
+        const insertQuery = `
+            INSERT INTO user (name, surname, email, phone, password, authToken, createdAt, updatedAt, activeAccount, username)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), 0, ?)
+        `;
+        await db.mysqlQuery(insertQuery, [name, surname, email, phone, hashedPassword, authToken, username]);
+
+        const newUserQuery = `
+            SELECT id FROM user WHERE email = ? LIMIT 1;
+        `;
+        const newUserResult = await db.mysqlQuery(newUserQuery, [email]);
+
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        const verifyCodeQuery = `
+            INSERT INTO register_codes (userId, code)
+            VALUES (?,?);
+        `;
+        await db.mysqlQuery(verifyCodeQuery, [newUserResult[0].id, code]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Kayıt başarılı.",
+            code: code,
+            userId: newUserResult[0].id
+        });
+
+    } catch (error) {
+        console.error("Register error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
 };
 
 exports.VerifyRegisterCode = async(req, res) => {
