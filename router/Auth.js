@@ -8,7 +8,7 @@ const registerValidation = {
         username: Joi.string().required(),
         name: Joi.string().required(),
         surname: Joi.string().required(),
-        email: Joi.string().email().required(), // Consider validating email format
+        email: Joi.string().email().required(), 
         phone: Joi.string().required(),
         password: Joi.string().required(),
         password2: Joi.string().required()
