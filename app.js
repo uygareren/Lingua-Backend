@@ -6,7 +6,7 @@ const authRouter = require("./router/Auth");
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("api/v1/auth", authRouter);
+app.use("/api/v1/auth", authRouter);
 
 app.get("/", (req, res) => {
   res.send("Running 12 3!");
