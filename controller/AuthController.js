@@ -360,7 +360,8 @@ exports.Login = async (req, res) => {
                 username: user.username,
                 activeAccount: user.activeAccount,
                 countryId: user.countryId,
-                languageId: user.languageId
+                languageId: user.languageId,
+                infoStatus: user.infoStatus
 
             } 
         });
