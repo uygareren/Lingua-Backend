@@ -315,7 +315,7 @@ exports.Login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, username, password, countryId, languageId FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
+        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, infoStatus, username, password, countryId, languageId FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
 
         const results = await db.mysqlQuery(userQuery, [email]);
 
