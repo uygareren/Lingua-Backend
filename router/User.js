@@ -17,9 +17,16 @@ const LanguageValidation = {
     }),
 };
 
+const CountryValidation = {
+    body: Joi.object({
+        countryId: Joi.number().required()
+    }),
+};
+
 const router = express.Router();
 
 router.post("/first-info", validate(FirstInfoValidation), AuthMiddleware(), UserController.PostFirstInfo)
 router.post("/set-language", validate(LanguageValidation), AuthMiddleware(), UserController.SetLanguage)
+router.post("/set-country", validate(CountryValidation), AuthMiddleware(), UserController.SetCountry)
 
 module.exports = router;    

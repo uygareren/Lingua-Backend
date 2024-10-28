@@ -48,3 +48,23 @@ exports.SetLanguage = async (req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 }
+
+exports.SetCountry = async(req, res) =>{
+    const userId = req.accountID;
+    const {countryId} = req.body;
+
+    try {
+        const updateQuery = `
+            UPDATE user SET countryId = ? WHERE id = ? LIMIT 1
+        `;
+        await db.mysqlQuery(updateQuery, [countryId, userId]);
+
+        return res.status(200).json({success:true});
+
+    } catch (error) {
+        console.error("PostFirstInfo error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+}
+
+
