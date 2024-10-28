@@ -50,11 +50,6 @@ exports.Register = async (req, res) => {
                 }
             }
 
-            // Eğer mevcut kullanıcı adı ile aynıysa
-            if (existingUser.username === username) {
-                return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten kullanılıyor!" });
-            }
-
             // Eğer mevcut telefon numarası ile aynıysa
             if (existingUser.phone === phone) {
                 return res.status(400).json({ success: false, message: "Bu telefon numarası zaten kullanılıyor!" });
