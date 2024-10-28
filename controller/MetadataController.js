@@ -23,7 +23,7 @@ exports.GetCountry = async (req, res) => {
 exports.GetLanguage = async (req, res) => {
     try {
         const query = `
-            SELECT id, language, iconUrl
+            SELECT id, language, iconUrl, countryCode
             FROM language;
         `;
         
