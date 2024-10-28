@@ -487,6 +487,26 @@ exports.Logout = async (req, res) => {
     }
 };
 
+exports.DeactivateAccount = async (req, res) => {
+    const userId = req.accountID 
+    try {
+        const query = `
+            UPDATE user
+            SET activeAccount = 0,
+                isOnline = 0,
+                authToken = NULL
+            WHERE id = ?;
+        `;
+
+        await db.mysqlQuery(query, [userId]);
+
+        res.status(200).json({ message: "Hesabınız başarıyla kapatıldı." });
+    } catch (error) {
+        console.error("Hesabı kapatırken hata:", error);
+        res.status(500).json({ message: "Hesabınızı kapatırken bir hata oluştu." });
+    }
+};
+
 
 
 

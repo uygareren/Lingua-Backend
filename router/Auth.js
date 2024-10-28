@@ -78,5 +78,6 @@ router.post('/forget-password-reset-password', validate(forgetPasswordResetPassw
 
 router.put('/password-update', AuthMiddleware(), AuthController.PasswordUpdate);
 router.post('/logout', AuthMiddleware(), AuthController.Logout);
+router.post('/deactive', AuthMiddleware(), AuthController.DeactivateAccount);
 
 module.exports = router;    
