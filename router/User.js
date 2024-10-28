@@ -5,13 +5,21 @@ const { AuthMiddleware } = require("../middleware/AuthMiddleware");
 
 const FirstInfoValidation = {
     body: Joi.object({
-        country: Joi.number().required(),
-        language: Joi.number().required()
+        countryId: Joi.number().required(),
+        languageId: Joi.number().required(),
+        spokenLanguageId: Joi.number().required()
+    }),
+};
+
+const LanguageValidation = {
+    body: Joi.object({
+        spokenLanguageId: Joi.number().required()
     }),
 };
 
 const router = express.Router();
 
-router.post("/first-info", AuthMiddleware(), UserController.PostFirstInfo)
+router.post("/first-info", validate(FirstInfoValidation), AuthMiddleware(), UserController.PostFirstInfo)
+router.post("/set-language", validate(LanguageValidation), AuthMiddleware(), UserController.SetLanguage)
 
 module.exports = router;    
