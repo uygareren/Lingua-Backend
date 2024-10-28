@@ -468,7 +468,24 @@ exports.PasswordUpdate = async (req, res) => {
     }
 };
 
+exports.Logout = async (req, res) => {
+    const userId = req.accountID 
+    try {
+        const query = `
+            UPDATE user
+            SET isOnline = 0,
+                authToken = NULL
+            WHERE id = ?;
+        `;
 
+        await db.mysqlQuery(query, [userId]);
+
+        res.status(200).json({ message: "Başarıyla çıkış yapıldı." });
+    } catch (error) {
+        console.error("Logout sırasında hata:", error);
+        res.status(500).json({ message: "Çıkış yaparken bir hata oluştu." });
+    }
+};
 
 
 

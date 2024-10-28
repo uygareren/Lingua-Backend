@@ -77,5 +77,6 @@ router.post('/forget-password-resend-verify', validate(forgetPasswordResendVerif
 router.post('/forget-password-reset-password', validate(forgetPasswordResetPasswordValidation), AuthController.ForgetPasswordResetPassword);
 
 router.put('/password-update', AuthMiddleware(), AuthController.PasswordUpdate);
+router.post('/logout', AuthMiddleware(), AuthController.Logout);
 
 module.exports = router;    
