@@ -425,6 +425,7 @@ exports.loginWithToken = async (req, res) => {
             surname: user.surname,
             email: user.email,
             phone: user.phone,
+            imageUrl: user.imageUrl,
             username: user.username,
             activeAccount: user.activeAccount,
             countryId: user.countryId,
