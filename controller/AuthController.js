@@ -3,87 +3,92 @@ const bcrypt = require('bcryptjs');
 const { createToken, decodeToken } = require('../utils/jwt');
 const db = require("../config/database");
 const crypto = require("crypto");
+const { sendRegisterEmail, ResendRegisterEmail, SendForgetPasswordEmail } = require('../services/NodeMailer');
 
 exports.Register = async (req, res) => {
     const { name, surname, email, phone, password, password2, username } = req.body;
 
+    // Check if passwords match
     if (password !== password2) {
         return res.status(400).json({ success: false, message: "Parolalar uyuşmuyor!" });
     }
 
     try {
-        const isResultQuery = `
+        // Query to check if email, username, or phone already exist
+        const checkUserQuery = `
             SELECT * FROM user
             WHERE email = ? OR username = ? OR phone = ?
             LIMIT 1
         `;
-        const isResult = await db.mysqlQuery(isResultQuery, [email, username, phone]);
+        const existingUser = await db.mysqlQuery(checkUserQuery, [email, username, phone]);
 
-        if (isResult.length > 0) {
-            const existingUser = isResult[0];
+        // If user exists, handle accordingly
+        if (existingUser.length > 0) {
+            const user = existingUser[0];
 
-            if (existingUser.email === email) {
-
-                if (existingUser.activeAccount === 0) {
-
+            if (user.email === email) {
+                // If email exists and account is inactive, send a new verification code
+                if (user.activeAccount === 0) {
+                    // Delete any previous verification codes
                     const deleteCodeQuery = `
                         DELETE FROM register_codes
                         WHERE userId = ?;
                     `;
-                    await db.mysqlQuery(deleteCodeQuery, [existingUser.id]);
+                    await db.mysqlQuery(deleteCodeQuery, [user.id]);
 
+                    // Generate and insert a new verification code
                     const code = Math.floor(100000 + Math.random() * 900000);
-                    const verifyCodeQuery = `
+                    const insertCodeQuery = `
                         INSERT INTO register_codes (userId, code)
                         VALUES (?, ?);
                     `;
-                    await db.mysqlQuery(verifyCodeQuery, [existingUser.id, code]);
+                    await db.mysqlQuery(insertCodeQuery, [user.id, code]);
 
                     return res.status(200).json({
                         success: true,
                         message: "Kayıt başarılı, yeni doğrulama kodu gönderildi.",
                         code: code,
-                        userId: existingUser.id
+                        userId: user.id
                     });
                 } else {
                     return res.status(400).json({ success: false, message: "Bu E-posta zaten kullanılıyor!" });
                 }
             }
 
-            // Eğer mevcut telefon numarası ile aynıysa
-            if (existingUser.phone === phone) {
+            if (user.phone === phone) {
                 return res.status(400).json({ success: false, message: "Bu telefon numarası zaten kullanılıyor!" });
             }
         }
 
-        // Yeni kullanıcı kaydı
         const hashedPassword = await bcrypt.hash(password, 10);
         const authToken = crypto.randomUUID();
+        const imageUrl = (Math.floor(Math.random() * 8) + 1).toString(); // Random string between "1" and "8"
 
-        const insertQuery = `
-            INSERT INTO user (name, surname, email, phone, password, authToken, createdAt, updatedAt, activeAccount, username)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), 0, ?)
+        const insertUserQuery = `
+            INSERT INTO user (name, surname, email, phone, password, authToken, createdAt, updatedAt, activeAccount, username, imageUrl)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), 0, ?, ?)
         `;
-        await db.mysqlQuery(insertQuery, [name, surname, email, phone, hashedPassword, authToken, username]);
+        await db.mysqlQuery(insertUserQuery, [name, surname, email, phone, hashedPassword, authToken, username, imageUrl]);
 
         const newUserQuery = `
             SELECT id FROM user WHERE email = ? LIMIT 1;
         `;
         const newUserResult = await db.mysqlQuery(newUserQuery, [email]);
+        const newUserId = newUserResult[0].id;
 
         const code = Math.floor(100000 + Math.random() * 900000);
-
-        const verifyCodeQuery = `
+        const insertCodeQuery = `
             INSERT INTO register_codes (userId, code)
             VALUES (?, ?);
         `;
-        await db.mysqlQuery(verifyCodeQuery, [newUserResult[0].id, code]);
+        await db.mysqlQuery(insertCodeQuery, [newUserId, code]);
+        await sendRegisterEmail(code, email);
 
         return res.status(200).json({
             success: true,
             message: "Kayıt başarılı.",
             code: code,
-            userId: newUserResult[0].id
+            userId: newUserId
         });
 
     } catch (error) {
@@ -91,8 +96,6 @@ exports.Register = async (req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 };
-
-
 
 
 exports.VerifyRegisterCode = async(req, res) => {
@@ -171,6 +174,7 @@ exports.ResendVerifyRegisterCode = async (req, res) => {
 
         await db.mysqlQuery(verifyCodeQuery, [userId, userId, code]);
 
+        await ResendRegisterEmail(code, email);
         return res.status(200).json({ success: true, message: "Yeni kod gönderildi!", code });
 
     } catch (error) {
@@ -180,37 +184,44 @@ exports.ResendVerifyRegisterCode = async (req, res) => {
 };
 
 
-exports.ForgetPasswordEmailVerification = async(req, res) => {
-    const {email} = req.body;
+exports.ForgetPasswordEmailVerification = async (req, res) => {
+    const { email } = req.body;
 
     try {
-
         const userQuery = `
             SELECT id FROM user WHERE email = ? LIMIT 1;
-        ` 
-
-        const user = await db.mysqlQuery(userQuery, [email]);
-        const userId = user[0].id;
-
-        const code = Math.floor(100000 + Math.random() * 900000)
-
-        const forgetCodeInsertQuery = `
-            INSERT INTO forget_password_codes (userId, code)
-            VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE 
-                code = ?, 
-                createdAt = CURRENT_TIMESTAMP;
         `;
 
-        await db.mysqlQuery(forgetCodeInsertQuery, [userId, code, code]);
+        const user = await db.mysqlQuery(userQuery, [email]);
 
-        return res.status(200).json({ success: true, message: "Reset code sent", code:code });
+        if (user.length === 0) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const userId = user[0].id;
+        const code = Math.floor(100000 + Math.random() * 900000);
+
+        const deleteOldCodeQuery = `
+            DELETE FROM forget_password_codes WHERE userId = ?;
+        `;
+        await db.mysqlQuery(deleteOldCodeQuery, [userId]);
+
+        const forgetCodeInsertQuery = `
+            INSERT INTO forget_password_codes (userId, code, createdAt)
+            VALUES (?, ?, CURRENT_TIMESTAMP);
+        `;
+
+        await db.mysqlQuery(forgetCodeInsertQuery, [userId, code]);
+        await SendForgetPasswordEmail(code, email);
+
+        return res.status(200).json({ success: true, message: "Reset code sent", code });
    
-
     } catch (error) {
-        
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
-}
+};
+
 
 exports.VerifyForgetPassword = async (req, res) => {
     const { email, code } = req.body;
@@ -278,6 +289,7 @@ exports.ResendVerifyForgetPassword = async (req, res) => {
             INSERT INTO forget_password_codes (userId, code)
             VALUES (?, ?);
         `;
+        await SendForgetPasswordEmail(newCode, email);
 
         await db.mysqlQuery(upsertCodeQuery, [userId, userId, newCode]);
 
@@ -315,7 +327,7 @@ exports.Login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const userQuery = 'SELECT id, name, surname, email, phone, activeAccount, infoStatus, username, password, countryId, languageId FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
+        const userQuery = 'SELECT id, name, surname, email, phone, imageUrl, activeAccount, infoStatus, username, password, countryId, languageId FROM user WHERE email = ? LIMIT 1'; // password eklenmeli
 
         const results = await db.mysqlQuery(userQuery, [email]);
 
@@ -357,6 +369,7 @@ exports.Login = async (req, res) => {
                 surname: user.surname,
                 email: user.email,
                 phone: user.phone,
+                imageUrl: user.imageUrl,
                 username: user.username,
                 activeAccount: user.activeAccount,
                 countryId: user.countryId,
