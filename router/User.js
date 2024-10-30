@@ -47,6 +47,15 @@ const LearntWordValidation = {
     }),
 };
 
+const UpdateProfileValidation = {
+    body: Joi.object({
+        name: Joi.string().required(),
+        surname: Joi.string().required(),
+        imageUrl: Joi.string().required()
+
+    }),
+};
+
 const router = express.Router();
 
 router.post("/first-info", validate(FirstInfoValidation), AuthMiddleware(), UserController.PostFirstInfo)
@@ -62,5 +71,7 @@ router.post("/leant-word", validate(LearntWordValidation), AuthMiddleware(), Use
 //LEARNT WORDS
 router.get("/learnt-languages",  AuthMiddleware(), UserController.GetLearntLanguageByUserId)
 router.get("/learnt-language/:languageId", validate(GetLanguageValidation), AuthMiddleware(), UserController.GetLearntLanguageDetail)
+
+router.post("/update-profile", validate(UpdateProfileValidation), AuthMiddleware(), UserController.UpdateProfile)
 
 module.exports = router;    

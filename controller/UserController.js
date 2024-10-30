@@ -223,5 +223,33 @@ exports.GetLearntLanguageDetail = async(req, res) => {
     }
 }
 
+exports.UpdateProfile = async (req, res) => {
+    const userId = req.accountID; 
+    const { name, surname, imageUrl } = req.body; 
+
+    try {
+        const query = `
+            UPDATE user 
+            SET 
+                name = ?, 
+                surname = ?, 
+                imageUrl = ?, 
+                updatedAt = NOW() 
+            WHERE id = ?
+        `;
+        
+        const result = await db.mysqlQuery(query, [name, surname, imageUrl, userId]);
+
+        if (result.affectedRows > 0) {
+            return res.status(200).json({ message: "Profile updated successfully." });
+        } else {
+            return res.status(404).json({ message: "User not found." });
+        }
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        return res.status(500).json({ message: "An error occurred while updating the profile." });
+    }
+};
+
 
 
