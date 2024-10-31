@@ -56,6 +56,17 @@ const UpdateProfileValidation = {
     }),
 };
 
+const PostStoryValidation = {
+    body: Joi.object({
+        languageId: Joi.number().required(),
+        storyTitle: Joi.string().required(),
+        story: Joi.string().required()
+
+    }),
+};
+
+
+
 const router = express.Router();
 
 router.post("/first-info", validate(FirstInfoValidation), AuthMiddleware(), UserController.PostFirstInfo)
@@ -73,5 +84,11 @@ router.get("/learnt-languages",  AuthMiddleware(), UserController.GetLearntLangu
 router.get("/learnt-language/:languageId", validate(GetLanguageValidation), AuthMiddleware(), UserController.GetLearntLanguageDetail)
 
 router.post("/update-profile", validate(UpdateProfileValidation), AuthMiddleware(), UserController.UpdateProfile)
+
+//SAVED STORİES
+router.post("/story", validate(PostStoryValidation), AuthMiddleware(), UserController.PostStory)
+router.get("/stories",  AuthMiddleware(), UserController.GetStoriesByUserId)
+router.get("/story/:languageId", AuthMiddleware(), UserController.getStoriesByLanguageId)
+router.get("/story-detail/:storyId", AuthMiddleware(), UserController.getStoryDetail)
 
 module.exports = router;    

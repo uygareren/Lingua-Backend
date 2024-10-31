@@ -251,5 +251,97 @@ exports.UpdateProfile = async (req, res) => {
     }
 };
 
+exports.PostStory = async(req, res) => {
+    const userId = req.accountID;
+    const { languageId, storyTitle, story } = req.body;
 
+    try {
+        const insertQuery = `
+            INSERT INTO saved_stories (userId, languageId, storyTitle, story) 
+            VALUES (?, ?, ?, ?)
+        `;
 
+        const insertResult = await db.mysqlQuery(insertQuery, [userId, languageId, storyTitle, story]);
+
+        if (insertResult.affectedRows > 0) {
+            return res.status(200).json({ success: true });
+        } else {
+            return res.status(400).json({ success: false });
+        }
+        
+    } catch (error) {
+        console.error("PostWord error:", error); // Changed to match function name
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+}
+
+exports.GetStoriesByUserId = async (req, res) => {
+    const userId = req.accountID;
+
+    try {
+        const query = `
+            SELECT 
+                l.id AS languageId,
+                l.language,
+                l.iconUrl,
+                l.countryCode,
+                COUNT(ss.story) AS storyCount
+            FROM 
+                language l
+            JOIN 
+                saved_stories ss ON l.id = ss.languageId 
+            WHERE 
+                ss.userId = ?
+            GROUP BY 
+                l.id, l.language, l.iconUrl, l.countryCode
+        `;
+
+        const results = await db.mysqlQuery(query, [userId]);
+
+        return res.status(200).json({ success: true, data: results });
+        
+    } catch (error) {
+        console.error("GetLanguageByUserId error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+}
+
+exports.getStoriesByLanguageId = async(req, res) => {
+    const userId = req.accountID;
+    const {languageId} = req.params;
+
+    try {
+
+        const savedWordsQuery = `
+            SELECT id, storyTitle, story FROM saved_stories 
+                WHERE userId = ? AND languageId = ? 
+        `;
+
+        const savedStoryResult = await db.mysqlQuery(savedWordsQuery, [userId, languageId]);
+        return res.status(200).json({success:true, data:savedStoryResult});
+        
+    } catch (error) {
+        console.error("PostFirstInfo error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+}
+
+exports.getStoryDetail = async(req, res) => {
+    const userId = req.accountID;
+    const {storyId} = req.params;
+
+    try {
+
+        const savedWordsQuery = `
+            SELECT id, storyTitle, story FROM saved_stories 
+                WHERE userId = ? AND id = ? 
+        `;
+
+        const savedStoryResult = await db.mysqlQuery(savedWordsQuery, [userId, storyId]);
+        return res.status(200).json({success:true, data:savedStoryResult});
+        
+    } catch (error) {
+        console.error("PostFirstInfo error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+}

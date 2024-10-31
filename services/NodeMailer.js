@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
-// const nodemailerConfig = require("../NodeMailerConfig.json");
+const nodemailerConfig = require("../NodeMailerConfig.json");
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: "aienglishgemini@gmail.com",
-        pass: "qprh pnqj jyyx hcyx",
+        user: nodemailerConfig.user,
+        pass: nodemailerConfig.pass,
     },
 });
 
@@ -28,7 +28,7 @@ exports.sendRegisterEmail = async(verificationCode, targetEmail)=> {
     const result = await sendEmail({
         from: FROM,
         to: targetEmail,
-        subject: 'Hesabını Onayla',
+        subject: 'Verify Your Account!',
         html: SendRegisterEmailTemplate(verificationCode)
     });
 
@@ -39,7 +39,7 @@ exports.ResendRegisterEmail = async(verificationCode, targetEmail)=> {
     const result = await sendEmail({
         from: FROM,
         to: targetEmail,
-        subject: 'Hesabını Onayla',
+        subject: 'Verify Your Account!',
         html: SendRegisterEmailTemplate(verificationCode)
     });
 
@@ -50,7 +50,7 @@ exports.SendForgetPasswordEmail = async(verificationCode, targetEmail)=> {
     const result = await sendEmail({
         from: FROM,
         to: targetEmail,
-        subject: 'Şifremi Unuttum',
+        subject: 'Forgot Password!',
         html: SendForgetPasswordEmailTemplate(verificationCode)
     });
 
@@ -123,10 +123,10 @@ function SendRegisterEmailTemplate(verificationCode) {
                     <img src="https://football-s3-bucket.s3.eu-central-1.amazonaws.com/post/gemspeak.jpeg" alt="GemSpeak Logo">
                 </div>
                 <div class="content">
-                    <h1>Hesap doğrulama</h1>
-                    <p>GemSpeak'e kaydolduğunuz için teşekkür ederiz! Lütfen kaydınızı tamamlamak için aşağıdaki doğrulama kodunu kullanın:</p>
+                    <h1>Account verification</h1>
+                    <p>Thank you for registering with GemSpeak! Please use the verification code below to complete your registration:</p>
                     <div class="code">${verificationCode}</div>
-                    <p>Eğer bunu talep etmediyseniz lütfen bu e-postayı dikkate almayın.</p>
+                    <p>If you did not request this, please ignore this email.</p>
                 </div>
                 <div class="footer">
                     &copy; 2024 GemSpeak. All rights reserved.
@@ -201,10 +201,10 @@ function SendForgetPasswordEmailTemplate(verificationCode) {
                     <img src="https://football-s3-bucket.s3.eu-central-1.amazonaws.com/post/gemspeak.jpeg" alt="Cyclemate Logo">
                 </div>
                 <div class="content">
-                    <h1>Şifre Sıfırlama</h1>
-                    <p>Şifrenizi sıfırlamanız için bir istek aldık. Devam etmek için aşağıdaki doğrulama kodunu kullanın:</p>
+                    <h1>Password Reset</h1>
+                    <p>We've received a request to reset your password. Use the verification code below to continue:</p>
                     <div class="code">${verificationCode}</div>
-                    <p>Eğer bunu talep etmediyseniz lütfen bu e-postayı dikkate almayın.</p>
+                    <p>If you did not request this, please ignore this email.</p>
                 </div>
                 <div class="footer">
                     &copy; 2024 GemSpeak. All rights reserved.
