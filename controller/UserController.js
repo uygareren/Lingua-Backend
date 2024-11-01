@@ -345,3 +345,57 @@ exports.getStoryDetail = async(req, res) => {
         return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
     }
 }
+
+exports.DeleteStory = async (req, res) => {
+    const userId = req.accountID;
+    const { storyId } = req.body;
+
+    try {
+        const result = await db.mysqlQuery(
+            "DELETE FROM saved_stories WHERE id = ? AND userId = ?",
+            [storyId, userId]
+        );
+
+        if (result.affectedRows == 0) {
+            return res.status(404).json({ success: false, message: "Hikaye bulunamadı veya erişim izniniz yok." });
+        }
+
+        return res.status(200).json({ success: true, message: "Hikaye başarıyla silindi." });
+    } catch (error) {
+        console.error("DeleteStory error:", error);
+        return res.status(500).json({ success: false, message: "Sunucu hatası. Tekrar deneyin." });
+    }
+};
+
+exports.SpeechToText = async (req, res) => {
+    const {audioUrl, audioConfig} = req.body;
+  
+    if (!audioUrl) return res.status(422).send("No audio URL was provided.");
+    if (!audioConfig)
+      return res.status(422).send("No audio config was provided.");
+  
+    try {
+      const speechResults = await fetch(
+        "https://speech.googleapis.com/v1/speech:recognize",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            audio: {
+              content: audioUrl,
+            },
+            config: audioConfig,
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-goog-api-key": `AIzaSyA4Bqu7Jr59fpSLuvI7X6GaD6r8QXpnyE8`,
+          },
+        }
+      ).then((response) => response.json());
+      return res.send(speechResults);
+    } catch (err) {
+      console.error("Error converting speech to text: ", err);
+      res.status(404).send(err);
+      return err;
+    }
+}

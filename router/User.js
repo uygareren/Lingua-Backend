@@ -65,7 +65,12 @@ const PostStoryValidation = {
     }),
 };
 
+const DeleteStoryValidation = {
+    body: Joi.object({
+        storyId: Joi.number().required()
 
+    }),
+};
 
 const router = express.Router();
 
@@ -90,5 +95,6 @@ router.post("/story", validate(PostStoryValidation), AuthMiddleware(), UserContr
 router.get("/stories",  AuthMiddleware(), UserController.GetStoriesByUserId)
 router.get("/story/:languageId", AuthMiddleware(), UserController.getStoriesByLanguageId)
 router.get("/story-detail/:storyId", AuthMiddleware(), UserController.getStoryDetail)
+router.delete("/story", AuthMiddleware(), UserController.DeleteStory)
 
 module.exports = router;    
