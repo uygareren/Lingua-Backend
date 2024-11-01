@@ -97,4 +97,6 @@ router.get("/story/:languageId", AuthMiddleware(), UserController.getStoriesByLa
 router.get("/story-detail/:storyId", AuthMiddleware(), UserController.getStoryDetail)
 router.delete("/story", AuthMiddleware(), UserController.DeleteStory)
 
+router.post("/speech-to-text", UserController.SpeechToText)
+
 module.exports = router;    
