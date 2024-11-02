@@ -399,3 +399,32 @@ exports.SpeechToText = async (req, res) => {
       return err;
     }
 }
+
+exports.GetStoriesByLanguageId = async (req, res) => {
+    const { languageId } = req.params; 
+
+    const query = 'SELECT * FROM stories WHERE languageId = ?';
+
+    try {
+        const results = await db.mysqlQuery(query, [languageId]); // mysqlQuery asenkron bir işlemse await kullanmalısınız
+        return res.status(200).json({ success: true, results }); // 'staus' hatası düzeltildi
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Veritabanı hatası', error: error.message });
+    }
+};
+
+exports.GetStoryDetailByStoryId = async (req, res) => {
+    const { storyId } = req.params; 
+
+    const query = 'SELECT * FROM stories WHERE id = ? LIMIT 1';
+
+    try {
+        const results = await db.mysqlQuery(query, [storyId]); // mysqlQuery asenkron bir işlemse await kullanmalısınız
+        return res.status(200).json({ success: true, results }); // 'staus' hatası düzeltildi
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Veritabanı hatası', error: error.message });
+    }
+};
+

@@ -72,6 +72,18 @@ const DeleteStoryValidation = {
     }),
 };
 
+const GetStatikStoriesValidation = {
+    params: Joi.object({
+        languageId: Joi.number().required(),
+    }),
+};
+
+const GetStatikStoryDetailValidation = {
+    params: Joi.object({
+        storyId: Joi.number().required(),
+    }),
+};
+
 const router = express.Router();
 
 router.post("/first-info", validate(FirstInfoValidation), AuthMiddleware(), UserController.PostFirstInfo)
@@ -98,5 +110,8 @@ router.get("/story-detail/:storyId", AuthMiddleware(), UserController.getStoryDe
 router.delete("/story", AuthMiddleware(), UserController.DeleteStory)
 
 router.post("/speech-to-text", UserController.SpeechToText)
+
+router.get("/static-story/:languageId", validate(GetStatikStoriesValidation), UserController.GetStoriesByLanguageId)
+router.get("/static-story-detail/:storyId", validate(GetStatikStoryDetailValidation), UserController.GetStoryDetailByStoryId)
 
 module.exports = router;    
